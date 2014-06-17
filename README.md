@@ -1,4 +1,4 @@
 emailroleassign
 ===============
 
-Drupal module that allows the administrator to assign specific roles to new users depending on their email domain.
+Lightweight drupal module that allows administrators to set up automated role assignment depending on the user's email domain name.
