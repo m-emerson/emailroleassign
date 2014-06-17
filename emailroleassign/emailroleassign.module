@@ -4,86 +4,86 @@
  * A module that assigns role permissions based on email domains 
  */
 function emailroleassign_user_insert(&$edit, $account, $category) {
-	$domains = variable_get('allowed_domains', 'edu.au, uq.edu.au');
-	// Remove all whitespace from domains
-	$domains = preg_replace('/\s+/', '', $domains);
-	$domains_arr = explode(",", $domains);
+    $domains = variable_get('allowed_domains', 'edu.au, uq.edu.au');
+    // Remove all whitespace from domains
+    $domains = preg_replace('/\s+/', '', $domains);
+    $domains_arr = explode(",", $domains);
 
-	// Determine this account's email domain
-	$mailTemp = $account->mail;
-	$splitIndex = strpos($mailTemp, '@') + 1;
-	$emailDomain = substr($mailTemp, $splitIndex, strlen($mailTemp));
+    // Determine this account's email domain
+    $mailTemp = $account->mail;
+    $splitIndex = strpos($mailTemp, '@') + 1;
+    $emailDomain = substr($mailTemp, $splitIndex, strlen($mailTemp));
 
-	$domainFlag = 0;
-	
-	foreach($domains_arr as $domain) {
-		if ($emailDomain == $domain) {
-			$domainFlag = 1;
-			break;
-		} 
-	}
+    $domainFlag = 0;
+    
+    foreach($domains_arr as $domain) {
+        if ($emailDomain == $domain) {
+            $domainFlag = 1;
+            break;
+        } 
+    }
 
-	if ($domainFlag) {
-		// Get the role ID for the assignment
-		$rid = variable_get('allowed_domains_role');
-		$assign_role = user_role_load($rid);
-		// New role has authenticated user and the new role assignment
-		$new_roles = array(
-			DRUPAL_AUTHENTICATED_RID => 'authenticated user',
-			$assign_role->rid => $assign_role->name);
-		$account->roles = $new_roles;
-	}
+    if ($domainFlag) {
+        // Get the role ID for the assignment
+        $rid = variable_get('allowed_domains_role');
+        $assign_role = user_role_load($rid);
+        // New role has authenticated user and the new role assignment
+        $new_roles = array(
+            DRUPAL_AUTHENTICATED_RID => 'authenticated user',
+            $assign_role->rid => $assign_role->name);
+        $account->roles = $new_roles;
+    }
 }
 
 /**
  * Implements hook_menu().
  */
 function emailroleassign_admin() {
-  $form = array();
+    $form = array();
   
-  $form['allowed_domains'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Allowed Domains',
-    '#default_value' => variable_get('allowed_domains', 'edu.au, uq.edu.au'),
-    '#size' => 60,
-    '#maxlength' => 255,
-    '#description' => 'Comma separated value of allowed email domains',
-    '#required' => TRUE,
-  );
+    $form['allowed_domains'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Allowed Domains',
+        '#default_value' => variable_get('allowed_domains', 'edu.au, uq.edu.au'),
+        '#size' => 60,
+        '#maxlength' => 255,
+        '#description' => 'Comma separated value of allowed email domains',
+        '#required' => TRUE,
+    );
 
-	$form['allowed_domains_role'] = array(
-  	'#type' => 'select',
-  	'#title' => t('Role'),
-  	'#options' => user_roles(),
-  	'#default_value' => variable_get('allowed_domains_role'),
-  	'#description' => 'Select what role the allowed domains will map to',
-   );
+    $form['allowed_domains_role'] = array(
+        '#type' => 'select',
+        '#title' => t('Role'),
+        '#options' => user_roles(),
+        '#default_value' => variable_get('allowed_domains_role'),
+        '#description' => 'Select what role the allowed domains will map to',
+    );
   
-  return system_settings_form($form);
+    return system_settings_form($form);
 }
 
 /**
  * Implements hook_menu()
  */
 function emailroleassign_menu() {
-  $items = array();
+    $items = array();
+    
+    $items['admin/config/emailroleassign'] = array(
+        'title' => 'emailroleassign Settings',
+        'description' => 'SETTINGS',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('emailroleassign_admin'),
+        'access arguments' => array('access administration pages'),
+        'type' => MENU_NORMAL_ITEM,
+    );
   
-  $items['admin/config/emailroleassign'] = array(
-    'title' => 'emailroleassign Settings',
-    'description' => 'SETTINGS',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('emailroleassign_admin'),
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-  
-  return $items;
+    return $items;
 } 
 
 /**
  * Implements hook_admin_paths().
  */
 function emailroleassign_admin_paths() {
-  return array('admin/config/emailroleassign' => TRUE);
+    return array('admin/config/emailroleassign' => TRUE);
 }
 
