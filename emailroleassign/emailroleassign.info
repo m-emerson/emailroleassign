@@ -1,0 +1,8 @@
+name = Email Role Assignment Module
+description = Assigns a role based on an input email address
+configure = admin/config/emailroleassign
+version = "7.x-1.0"
+core = "7.x"
+project = "emailroleassign"
+
+files[] = emailroleassign.module
