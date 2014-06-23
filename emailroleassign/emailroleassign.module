@@ -4,35 +4,35 @@
  * A module that assigns role permissions based on email domains 
  */
 function emailroleassign_user_insert(&$edit, $account, $category) {
-    $domains = variable_get('allowed_domains', 'edu.au, uq.edu.au');
-    // Remove all whitespace from domains
-    $domains = preg_replace('/\s+/', '', $domains);
-    $domains_arr = explode(",", $domains);
+	$domains = variable_get('allowed_domains', 'edu.au, uq.edu.au');
+	// Remove all whitespace from domains
+	$domains = preg_replace('/\s+/', '', $domains);
+	$domains_arr = explode(",", $domains);
 
-    // Determine this account's email domain
-    $mailTemp = $account->mail;
-    $splitIndex = strpos($mailTemp, '@') + 1;
-    $emailDomain = substr($mailTemp, $splitIndex, strlen($mailTemp));
+	// Determine this account's email domain
+	$mailTemp = $account->mail;
+	$splitIndex = strpos($mailTemp, '@') + 1;
+	$emailDomain = substr($mailTemp, $splitIndex, strlen($mailTemp));
 
-    $domainFlag = 0;
-    
-    foreach($domains_arr as $domain) {
-        if ($emailDomain == $domain) {
-            $domainFlag = 1;
-            break;
-        } 
-    }
+	$domainFlag = 0;
+	
+	foreach($domains_arr as $domain) {
+		if ($emailDomain == $domain) {
+			$domainFlag = 1;
+			break;
+		} 
+	}
 
-    if ($domainFlag) {
-        // Get the role ID for the assignment
-        $rid = variable_get('allowed_domains_role');
-        $assign_role = user_role_load($rid);
-        // New role has authenticated user and the new role assignment
-        $new_roles = array(
-            DRUPAL_AUTHENTICATED_RID => 'authenticated user',
-            $assign_role->rid => $assign_role->name);
-        $account->roles = $new_roles;
-    }
+	if ($domainFlag) {
+		// Get the role ID for the assignment
+		$rid = variable_get('allowed_domains_role');
+		$assign_role = user_role_load($rid);
+		// New role has authenticated user and the new role assignment
+		$new_roles = array(
+			DRUPAL_AUTHENTICATED_RID => 'authenticated user',
+			$assign_role->rid => $assign_role->name);
+		$account->roles = $new_roles;
+	}
 }
 
 /**
@@ -51,14 +51,14 @@ function emailroleassign_admin() {
         '#required' => TRUE,
     );
 
-    $form['allowed_domains_role'] = array(
-        '#type' => 'select',
-        '#title' => t('Role'),
-        '#options' => user_roles(),
-        '#default_value' => variable_get('allowed_domains_role'),
-        '#description' => 'Select what role the allowed domains will map to',
+	$form['allowed_domains_role'] = array(
+  	    '#type' => 'select',
+  	    '#title' => t('Role'),
+  	    '#options' => user_roles(),
+  	    '#default_value' => variable_get('allowed_domains_role'),
+  	    '#description' => 'Select what role the allowed domains will map to',
     );
-  
+
     return system_settings_form($form);
 }
 
@@ -67,7 +67,7 @@ function emailroleassign_admin() {
  */
 function emailroleassign_menu() {
     $items = array();
-    
+  
     $items['admin/config/emailroleassign'] = array(
         'title' => 'emailroleassign Settings',
         'description' => 'SETTINGS',
@@ -85,5 +85,17 @@ function emailroleassign_menu() {
  */
 function emailroleassign_admin_paths() {
     return array('admin/config/emailroleassign' => TRUE);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function emailroleassign_form_alter(&$form, &$form_state, $form_id){
+    switch($form_id) {  
+        /* Alter the description to detail our new modifications */
+        case 'user_register_form': // the value we stole from the rendered form  
+            $form['account']['mail']['#description'] = t('Please note that the following domains will be granted full user access: ') . variable_get('allowed_domains', 'edu.au, uq.edu.au') . t('.</br>Other domains will be able to browse content but will be unable to post messages until admin approval is granted');
+        break;
+    }  
 }
 
