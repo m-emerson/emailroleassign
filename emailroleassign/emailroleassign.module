@@ -51,7 +51,7 @@ function emailroleassign_admin() {
         '#required' => TRUE,
     );
 
-	$form['allowed_domains_role'] = array(
+    $form['allowed_domains_role'] = array(
   	    '#type' => 'select',
   	    '#title' => t('Role'),
   	    '#options' => user_roles(),
