@@ -144,7 +144,6 @@ function saml_hook_post_user_created($user) {
 
     /* Map roles if we found any */
     for ($i = 0; $i < count($role_mapping); $i++) {
-	print_r($role_mapping[$i]->id);
 	// Find the context level of this role
 	$context = $DB->get_record( 'role_context_levels', array('roleid'=>$role_mapping[$i]->id) );
         role_assign($role_mapping[$i]->id, $user->id, $context->contextlevel);	
