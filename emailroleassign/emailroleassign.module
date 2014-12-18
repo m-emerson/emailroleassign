@@ -54,7 +54,7 @@ function emailroleassign_menu() {
  * Implements hook_admin_paths().
  */
 function emailroleassign_admin_paths() {
-    return array('admin/config/emailroleassign' => TRUE);
+    return array('admin/config/people/emailroleassign' => TRUE);
 }
 
 /**
