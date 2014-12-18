@@ -71,27 +71,26 @@ function emailroleassign_form_user_register_form_alter(&$form, $form_state) {
  */
 function emailroleassign_form_user_register_submit(&$form, &$form_state) {
   if ($rid = variable_get('allowed_domains_assigned_role', '')) {
-    $domains = variable_get('allowed_domains', 'edu.au, uq.edu.au');
+    $domains = variable_get('allowed_domains', '*.edu.*');
     // Remove all whitespace from domains
     $domains = preg_replace('/\s+/', '', $domains);
     $domains_arr = explode(",", $domains);
 
     // Determine this account's email domain
-    $mailTemp = $account->mail;
+    $mailTemp = $form['account']['mail']['#value'];
     $splitIndex = strpos($mailTemp, '@') + 1;
     $emailDomain = substr($mailTemp, $splitIndex, strlen($mailTemp));
 
     $domainFlag = 0;
 	
     foreach($domains_arr as $domain) {
-      if ($emailDomain == $domain) {
-        $domainFlag = 1;  
-        break;
-      } 
-    }
-    
+      if (fnmatch($domain, $emailDomain)) {
+        $domainFlag = 1;
         $roles = user_roles(TRUE);
         $form_state['values']['roles'][$rid] = $roles[$rid];
+        break;
+      }
+    }
   }
 }
 
