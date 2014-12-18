@@ -7,7 +7,7 @@
 /**
  * Implements hook_menu().
  */
-function emailroleassign_admin_settings() {
+function emailroleassign_admin() {
     $form = array();
   
     $form['allowed_domains'] = array(
@@ -86,11 +86,12 @@ function emailroleassign_form_user_register_submit(&$form, &$form_state) {
     foreach($domains_arr as $domain) {
       if ($emailDomain == $domain) {
         $domainFlag = 1;  
-        $roles = user_roles(TRUE);
-        $form_state['values']['roles'][$rid] = $roles[$rid];
         break;
       } 
     }
+    
+        $roles = user_roles(TRUE);
+        $form_state['values']['roles'][$rid] = $roles[$rid];
   }
 }
 
