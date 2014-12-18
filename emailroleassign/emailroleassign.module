@@ -3,42 +3,11 @@
  * @file
  * A module that assigns role permissions based on email domains 
  */
-function emailroleassign_user_insert(&$edit, $account, $category) {
-	$domains = variable_get('allowed_domains', 'edu.au, uq.edu.au');
-	// Remove all whitespace from domains
-	$domains = preg_replace('/\s+/', '', $domains);
-	$domains_arr = explode(",", $domains);
-
-	// Determine this account's email domain
-	$mailTemp = $account->mail;
-	$splitIndex = strpos($mailTemp, '@') + 1;
-	$emailDomain = substr($mailTemp, $splitIndex, strlen($mailTemp));
-
-	$domainFlag = 0;
-	
-	foreach($domains_arr as $domain) {
-		if ($emailDomain == $domain) {
-			$domainFlag = 1;
-			break;
-		} 
-	}
-
-	if ($domainFlag) {
-		// Get the role ID for the assignment
-		$rid = variable_get('allowed_domains_role');
-		$assign_role = user_role_load($rid);
-		// New role has authenticated user and the new role assignment
-		$new_roles = array(
-			DRUPAL_AUTHENTICATED_RID => 'authenticated user',
-			$assign_role->rid => $assign_role->name);
-		$account->roles = $new_roles;
-	}
-}
-
+ 
 /**
  * Implements hook_menu().
  */
-function emailroleassign_admin() {
+function emailroleassign_admin_settings() {
     $form = array();
   
     $form['allowed_domains'] = array(
@@ -50,15 +19,16 @@ function emailroleassign_admin() {
         '#description' => 'Comma separated value of allowed email domains',
         '#required' => TRUE,
     );
-
-    $form['allowed_domains_role'] = array(
-  	    '#type' => 'select',
-  	    '#title' => t('Role'),
-  	    '#options' => user_roles(),
-  	    '#default_value' => variable_get('allowed_domains_role'),
-  	    '#description' => 'Select what role the allowed domains will map to',
+    
+    $roles = user_roles(TRUE);
+    unset($roles['2']);
+    $form['allowed_domains_assigned_role'] = array(
+      '#type' => 'radios',
+      '#title' => t('Role to automatically assign to new registrants with the correct email'),
+      '#options' => $roles,
+      '#default_value' => variable_get('registration_role_roles', ''),
+      '#description' => t('The selected role will be assigned to users who register using the user-registration form. Be sure this role does not have any privileges you fear giving out without reviewing who receives it.'),
     );
-
     return system_settings_form($form);
 }
 
@@ -68,7 +38,7 @@ function emailroleassign_admin() {
 function emailroleassign_menu() {
     $items = array();
   
-    $items['admin/config/emailroleassign'] = array(
+    $items['admin/config/people/emailroleassign'] = array(
         'title' => 'emailroleassign Settings',
         'description' => 'SETTINGS',
         'page callback' => 'drupal_get_form',
@@ -85,6 +55,43 @@ function emailroleassign_menu() {
  */
 function emailroleassign_admin_paths() {
     return array('admin/config/emailroleassign' => TRUE);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function emailroleassign_form_user_register_form_alter(&$form, $form_state) {
+  // Insert our handler BEFORE user_register_submit().
+  // This allows us to add the role before the new user is saved.
+  array_unshift($form['#submit'], 'emailroleassign_form_user_register_submit');
+}
+
+/**
+ * Submit handler for the user registration form.
+ */
+function emailroleassign_form_user_register_submit(&$form, &$form_state) {
+  if ($rid = variable_get('allowed_domains_assigned_role', '')) {
+    $domains = variable_get('allowed_domains', 'edu.au, uq.edu.au');
+    // Remove all whitespace from domains
+    $domains = preg_replace('/\s+/', '', $domains);
+    $domains_arr = explode(",", $domains);
+
+    // Determine this account's email domain
+    $mailTemp = $account->mail;
+    $splitIndex = strpos($mailTemp, '@') + 1;
+    $emailDomain = substr($mailTemp, $splitIndex, strlen($mailTemp));
+
+    $domainFlag = 0;
+	
+    foreach($domains_arr as $domain) {
+      if ($emailDomain == $domain) {
+        $domainFlag = 1;  
+        $roles = user_roles(TRUE);
+        $form_state['values']['roles'][$rid] = $roles[$rid];
+        break;
+      } 
+    }
+  }
 }
 
 /**
